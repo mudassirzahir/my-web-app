@@ -1,0 +1,31 @@
+name: Web Quality Check
+
+# 1. EVENT: Trigger this whenever code is pushed to main
+on:
+  push:
+    branches: [main]
+
+# 2. JOBS: What virtual computer to use and what to do
+jobs:
+  validate-web-files:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step A: Download your repo code onto the virtual computer
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # Step B: Check if index.html exists and has a title or heading
+      - name: Check HTML structure
+        run: |
+          echo "Checking index.html..."
+          test -f index.html
+          grep -q "<h1>" index.html
+          echo "HTML check passed!"
+
+      # Step C: Check if style.css exists and is not empty
+      - name: Check CSS file
+        run: |
+          echo "Checking style.css..."
+          test -s style.css
+          echo "CSS check passed!"
