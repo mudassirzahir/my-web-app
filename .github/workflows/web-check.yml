@@ -1,31 +1,52 @@
-name: Web Quality Check
+name: Web CI and Deploy
 
-# 1. EVENT: Trigger this whenever code is pushed to main
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
-# 2. JOBS: What virtual computer to use and what to do
+# Grant permissions required to publish to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
+  # JOB 1: Continuous Integration (Test your code)
   validate-web-files:
     runs-on: ubuntu-latest
-
     steps:
-      # Step A: Download your repo code onto the virtual computer
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      # Step B: Check if index.html exists and has a title or heading
       - name: Check HTML structure
         run: |
-          echo "Checking index.html..."
           test -f index.html
           grep -q "<h1>" index.html
-          echo "HTML check passed!"
 
-      # Step C: Check if style.css exists and is not empty
       - name: Check CSS file
-        run: |
-          echo "Checking style.css..."
-          test -s style.css
-          echo "CSS check passed!"
+        run: test -s style.css
+
+  # JOB 2: Continuous Deployment (Publish if Job 1 passes)
+  deploy-website:
+    needs: validate-web-files
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Package website files
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
